@@ -74,7 +74,22 @@
 	  position: absolute;
 	  width: 40px;
 	  height: 40px;
-	  border: 2px solid #333;
+	  border: 2px solid lightgrey;
+	  border-radius: 35%;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  font-weight: bold;
+	  font-size: 18px;
+	  cursor: grab;
+	  user-select: none;
+	  z-index: 999999;
+	}
+	.dice {
+	  position: absolute;
+	  width: 40px;
+	  height: 40px;
+	  border: 2px outset #333;
 	  display: flex;
 	  align-items: center;
 	  justify-content: center;
@@ -88,7 +103,7 @@
 </head>
 <body>
 
-<h1>Classroom - Exams</h1>
+<h1>KAMPUNG - Roll & Run</h1>
 
 <input id="fileInput" type="file" multiple accept="image/*" disabled/>
 <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
@@ -120,10 +135,36 @@
     "D0036.png", , "rules.png"
   ];*/
     const defaultImageFiles = [
-    "T1.png", "T2.png", "T3.png", "T4.png", "T5.png",
-    "T6.png", "action.png", "rules.png"
-  ];
-  
+		"T1.png", "T2.png", "T3.png", "T4.png", "T5.png",
+		"T6.png", "S1.png",
+		"S2.png",
+		"S3.png",
+		"S4.png",
+		"S5a.png",
+		"S5b.png",
+		"S6a.png",
+		"S6b.png",
+		"S7a.png",
+		"S7b.png",
+		"S8a.png",
+		"S8b.png",
+		"S9a.png",
+		"S9b.png",
+		"S10a.png",
+		"S10b.png",
+		"S11a.png",
+		"S11b.png",
+		"S12a.png",
+		"S12b.png",
+		"S13a.png",
+		"S13b.png",
+		"S14a.png",
+		"S14b.png",
+		"S15a.png",
+		"S15b.png",
+		"S16a.png",
+		"S16b.png", "action.png", "rules.png"
+	];
   
   const markerColors = [
 	  "red",
@@ -133,6 +174,14 @@
 	  "black",
 	  "white",
 	  "magenta"
+	];
+	const diceColors = [
+	  "darksalmon",
+	  "lightgreen",
+	  "aqua",
+	  "khaki",
+	  "black",
+	  "white",
 	];
 
 	const markerNumbers = [0,1,2,3,4,5,6];
@@ -153,13 +202,6 @@
     defaultImageFiles.forEach(fileName => {
       const url = `aMIX/${fileName}`;
       const lowerName = fileName.toLowerCase();
-	  
-	  for (let i = 0; i < 10; i++) {
-		  createMarker(
-			20 + (i * 45),
-			window.innerHeight - 80
-		  );
-		}
       
       if (lowerName.includes('rule')) {
         rules.push({ name: fileName, url });
@@ -174,6 +216,18 @@
       }
     });
     
+	for (let i = 0; i < 10; i++) {
+		createMarker(
+		300 + (i * 45),
+		window.innerHeight * 0.1
+		);
+		createDice(
+		300 + (i * 45),
+		window.innerHeight * 0.16
+		);
+		console.log(i);
+	}
+	
     console.log("Loaded Images:");
     images.forEach(url => console.log("Image:", url));
     rules.forEach(rule => console.log("Rule:", rule.name));
@@ -446,7 +500,7 @@
 	  const updateTextColor = () => {
 		const c = markerColors[colorIndex];
 		marker.style.color =
-		  (c === "black" || c === "blue" || c === "magenta")
+		  (c === "black" || c === "blue" || c === "magenta" || c === "green" || c === "red")
 			? "white"
 			: "black";
 	  };
@@ -586,6 +640,111 @@
 	});
 
 	  document.body.appendChild(marker);
+	}
+	
+	function createDice(x, y) {
+	  const dice = document.createElement('div');
+	  dice.className = 'dice';
+
+	  let colorIndex = Math.floor(Math.random() * diceColors.length);
+	  let numberIndex = 0;
+
+	  dice.style.backgroundColor = diceColors[colorIndex];
+
+	  dice.style.left = x + 'px';
+	  dice.style.top = y-50 + 'px';
+
+	  // Always above cards
+	  dice.style.zIndex = 999999;
+
+	  // Right click = random color
+	  dice.addEventListener('contextmenu', (e) => {
+		  e.preventDefault();
+
+		  let newIndex;
+
+		  do {
+			newIndex = Math.floor(Math.random() * diceColors.length);
+		  } while (newIndex === colorIndex && diceColors.length > 1);
+
+		  colorIndex = newIndex;
+
+		  dice.style.backgroundColor = diceColors[colorIndex];
+		});
+
+	  // Dragging
+	  let dragging = false;
+		let moved = false;
+		let offsetX = 0;
+		let offsetY = 0;
+		let startX = 0;
+		let startY = 0;
+
+		dice.addEventListener('mousedown', (e) => {
+		  if (e.button !== 0) return;
+
+		  dragging = true;
+		  moved = false;
+
+		  startX = e.clientX;
+		  startY = e.clientY;
+
+		  offsetX = e.clientX - dice.offsetLeft;
+		  offsetY = e.clientY - dice.offsetTop;
+
+		  dice.style.zIndex = 999999;
+		});
+
+		document.addEventListener('mousemove', (e) => {
+		  if (!dragging) return;
+
+		  if (
+			Math.abs(e.clientX - startX) > 3 ||
+			Math.abs(e.clientY - startY) > 3
+		  ) {
+			moved = true;
+		  }
+
+		  dice.style.left = (e.clientX - offsetX) + 'px';
+		  dice.style.top = (e.clientY - offsetY) + 'px';
+		});
+
+		document.addEventListener('mouseup', () => {
+		  dragging = false;
+		});
+
+
+	  // Touch support
+	  dice.addEventListener('touchstart', (e) => {
+	  const touch = e.touches[0];
+
+	  dragging = true;
+	  moved = false;
+
+	  startX = touch.clientX;
+	  startY = touch.clientY;
+
+	  offsetX = touch.clientX - dice.offsetLeft;
+	  offsetY = touch.clientY - dice.offsetTop;
+	}, { passive:false });
+
+	document.addEventListener('touchmove', (e) => {
+	  if (!dragging) return;
+
+	  const touch = e.touches[0];
+
+	  if (
+		Math.abs(touch.clientX - startX) > 3 ||
+		Math.abs(touch.clientY - startY) > 3
+	  ) {
+		moved = true;
+	  }
+
+	  dice.style.left = (touch.clientX - offsetX) + 'px';
+	  dice.style.top = (touch.clientY - offsetY) + 'px';
+	}, { passive:false });
+
+	  document.body.appendChild(dice);
 	}
   
   // Function for drawing a draggable image from a given source
