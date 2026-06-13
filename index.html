@@ -70,6 +70,20 @@
       transition: transform 0.2s ease;
       transform-origin: center center;
     }
+	.marker {
+	  position: absolute;
+	  width: 40px;
+	  height: 40px;
+	  border: 2px solid #333;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  font-weight: bold;
+	  font-size: 18px;
+	  cursor: grab;
+	  user-select: none;
+	  z-index: 999999;
+	}
   </style>
 </head>
 <body>
@@ -95,18 +109,33 @@
   const message = document.getElementById('message');
   const rulesContainer = document.getElementById('rulesContainer');
   
-  const defaultImageFiles = [
-    "D0001.png", "D0002.png", "D0003.png", "D0004.png", "D0005.png",
-    "D0006.png", "D0007.png", "D0008.png", "D0009.png", "D0010.png",
-    "D0011.png", "D0012.png", "D0013.png", "D0014.png", "D0015.png",
+/*  const defaultImageFiles = [
+    "B1.png", "B2.png", "B3.png", "R1.png", "R2.png",
+    "R3.png", "G1.png", "G2.png", "G3.png", "Y1.png",
+    "Y2.png", "Y3.png", "D0013.png", "D0014.png", "D0015.png",
     "D0016.png", "D0017.png", "D0018.png", "D0019.png", "D0020.png",
     "D0021.png", "D0022.png", "D0023.png", "D0024.png", "D0025.png",
     "D0026.png", "D0027.png", "D0028.png", "D0029.png", "D0030.png",
     "D0031.png", "D0032.png", "D0033.png", "D0034.png", "D0035.png",
-    "D0036.png", "S0001.png", "S0002.png", "S0003.png", "S0004.png",
-    "S0005.png", "S0006.png", "S0007.png", "S0008.png", "S0009.png",
-    "S0010.png", "aidF.png", "aidR.png", "rules.png"
+    "D0036.png", , "rules.png"
+  ];*/
+    const defaultImageFiles = [
+    "T1.png", "T2.png", "T3.png", "T4.png", "T5.png",
+    "T6.png", "action.png", "rules.png"
   ];
+  
+  
+  const markerColors = [
+	  "red",
+	  "green",
+	  "blue",
+	  "yellow",
+	  "black",
+	  "white",
+	  "magenta"
+	];
+
+	const markerNumbers = [0,1,2,3,4,5,6];
   
   // Global arrays to store images, rules, and the aid image
   let images = [];
@@ -124,6 +153,13 @@
     defaultImageFiles.forEach(fileName => {
       const url = `aMIX/${fileName}`;
       const lowerName = fileName.toLowerCase();
+	  
+	  for (let i = 0; i < 10; i++) {
+		  createMarker(
+			20 + (i * 45),
+			window.innerHeight - 80
+		  );
+		}
       
       if (lowerName.includes('rule')) {
         rules.push({ name: fileName, url });
@@ -396,6 +432,161 @@
     img.addEventListener('contextmenu', e => e.preventDefault());
     img.ondragstart = () => false;
   }
+  
+  function createMarker(x, y) {
+	  const marker = document.createElement('div');
+	  marker.className = 'marker';
+
+	  let colorIndex = Math.floor(Math.random() * markerColors.length);
+	  let numberIndex = 0;
+
+	  marker.style.backgroundColor = markerColors[colorIndex];
+
+	  // Make text visible on dark colors
+	  const updateTextColor = () => {
+		const c = markerColors[colorIndex];
+		marker.style.color =
+		  (c === "black" || c === "blue" || c === "magenta")
+			? "white"
+			: "black";
+	  };
+
+	  updateTextColor();
+
+	  marker.textContent = markerNumbers[numberIndex];
+
+	  marker.style.left = x + 'px';
+	  marker.style.top = y + 'px';
+
+	  // Always above cards
+	  marker.style.zIndex = 999999;
+
+	  // Left click = rotate number
+/*	  marker.addEventListener('click', (e) => {
+		e.preventDefault();
+
+		numberIndex++;
+		if (numberIndex >= markerNumbers.length) {
+		  numberIndex = 0;
+		}
+
+		marker.textContent = markerNumbers[numberIndex];
+	  });*/
+
+	  // Right click = change color
+	  marker.addEventListener('contextmenu', (e) => {
+		e.preventDefault();
+
+		colorIndex++;
+		if (colorIndex >= markerColors.length) {
+		  colorIndex = 0;
+		}
+
+		marker.style.backgroundColor = markerColors[colorIndex];
+		updateTextColor();
+	  });
+
+	  // Dragging
+	  let dragging = false;
+		let moved = false;
+		let offsetX = 0;
+		let offsetY = 0;
+		let startX = 0;
+		let startY = 0;
+
+		marker.addEventListener('mousedown', (e) => {
+		  if (e.button !== 0) return;
+
+		  dragging = true;
+		  moved = false;
+
+		  startX = e.clientX;
+		  startY = e.clientY;
+
+		  offsetX = e.clientX - marker.offsetLeft;
+		  offsetY = e.clientY - marker.offsetTop;
+
+		  marker.style.zIndex = 999999;
+		});
+
+		document.addEventListener('mousemove', (e) => {
+		  if (!dragging) return;
+
+		  if (
+			Math.abs(e.clientX - startX) > 3 ||
+			Math.abs(e.clientY - startY) > 3
+		  ) {
+			moved = true;
+		  }
+
+		  marker.style.left = (e.clientX - offsetX) + 'px';
+		  marker.style.top = (e.clientY - offsetY) + 'px';
+		});
+
+		document.addEventListener('mouseup', () => {
+		  dragging = false;
+		});
+
+		// Left click = rotate number ONLY if not dragged
+		marker.addEventListener('click', (e) => {
+		  if (moved) return;
+
+		  numberIndex--;
+		  if (numberIndex < 0) {
+			numberIndex = 6;
+		  }
+		  if (numberIndex >= markerNumbers.length) {
+			numberIndex = 0;
+		  }
+
+		  marker.textContent = markerNumbers[numberIndex];
+		});
+
+	  // Touch support
+	  marker.addEventListener('touchstart', (e) => {
+	  const touch = e.touches[0];
+
+	  dragging = true;
+	  moved = false;
+
+	  startX = touch.clientX;
+	  startY = touch.clientY;
+
+	  offsetX = touch.clientX - marker.offsetLeft;
+	  offsetY = touch.clientY - marker.offsetTop;
+	}, { passive:false });
+
+	document.addEventListener('touchmove', (e) => {
+	  if (!dragging) return;
+
+	  const touch = e.touches[0];
+
+	  if (
+		Math.abs(touch.clientX - startX) > 3 ||
+		Math.abs(touch.clientY - startY) > 3
+	  ) {
+		moved = true;
+	  }
+
+	  marker.style.left = (touch.clientX - offsetX) + 'px';
+	  marker.style.top = (touch.clientY - offsetY) + 'px';
+	}, { passive:false });
+
+	document.addEventListener('touchend', () => {
+	  if (!moved) {
+		numberIndex++;
+		if (numberIndex >= markerNumbers.length) {
+		  numberIndex = 0;
+		}
+
+		marker.textContent = markerNumbers[numberIndex];
+	  }
+
+	  dragging = false;
+	});
+
+	  document.body.appendChild(marker);
+	}
   
   // Function for drawing a draggable image from a given source
   function createDraggableImage(src) {
